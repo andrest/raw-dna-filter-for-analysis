@@ -1,6 +1,6 @@
 # DNA Variant Filter for Neuropsychiatric Analysis
 
-A simple script to extract relevant genetic variants from raw DNA testing data for educational analysis of brain chemistry, stress response, and drug metabolism.
+A universal script to extract relevant genetic variants from raw DNA testing data for educational analysis of brain chemistry, stress response, and drug metabolism.
 
 ## Quick Start
 
@@ -14,7 +14,57 @@ chmod +x filter_dna_variants.sh
 # Output will be saved as: dna_variants_filtered.txt
 ```
 
-## Supported DNA Testing Services
+## Summary Output
+
+After processing, the script displays a clear summary showing extraction status:
+
+```
+                         EXTRACTION SUMMARY
+────────────────────────────────────────────────────────────────────────
+
+  Status:              ✓ SUCCESS
+
+  Variants matched:    142 / 196 targets (72.4%)
+  Alleles detected:    142 / 142 variants
+  Position data:       142 / 142 variants
+  Categories covered:  31 / 35 gene groups
+
+  Top categories:
+    • COMT Dopamine Clearance                8
+    • DRD2 Dopamine D2 Receptor              7
+    • CYP450 Drug Metabolism                 6
+    ...
+
+────────────────────────────────────────────────────────────────────────
+  Input file:          AncestryDNA.txt (15M)
+  Output file:         dna_variants_filtered.txt (4.2K)
+  Format detected:     ancestrydna
+────────────────────────────────────────────────────────────────────────
+
+Extraction successful!
+  • Output file is ready to share for analysis
+
+Privacy: Extracted 142 of ~715382 variants (0.020%) - safe to share
+```
+
+### Status Indicators
+
+| Status | Icon | Meaning |
+|--------|------|---------|
+| **SUCCESS** | ✓ | 20+ variants found with alleles detected |
+| **PARTIAL** | ⚠ | Some data extracted but may be incomplete |
+| **FAILED** | ✗ | No matching variants found |
+
+### Key Metrics Explained
+
+- **Variants matched**: How many of the 196 target rsIDs were found in your file
+- **Alleles detected**: Variants where both allele1 and allele2 were successfully extracted
+- **Position data**: Variants with valid chromosome position information
+- **Categories covered**: How many gene groups have at least one variant
+
+## Supported Formats
+
+### Consumer DNA Testing Services
 
 | Service | File Type | How to Download |
 |---------|-----------|-----------------|
@@ -24,6 +74,28 @@ chmod +x filter_dna_variants.sh
 | **FamilyTreeDNA** | .csv | myFTDNA → Download Raw Data |
 | **LivingDNA** | .csv/.txt | Account → Download Raw Data |
 | **Nebula Genomics** | .txt | Account → Download Data |
+| **Dante Labs** | .txt | Account → Download Raw Data |
+| **Genes for Good** | .txt | From research portal |
+
+### Research & Clinical Formats
+
+| Format | Extensions | Description |
+|--------|------------|-------------|
+| **VCF** | .vcf, .vcf.gz | Variant Call Format (standard bioinformatics format) |
+| **PLINK** | .bim | PLINK binary genotype format |
+| **Illumina** | .txt, .csv | GenomeStudio FinalReport, GSA array exports |
+| **Generic TSV/CSV** | .txt, .csv | Any tab/comma-separated file with rsID column |
+
+### Auto-Detection
+
+The script automatically detects your file format by examining:
+- Header comments (service identifiers like "AncestryDNA", "23andMe")
+- VCF format markers (`##fileformat=VCF`)
+- Illumina markers (`[Header]`, `GSGT Version`)
+- Column structure and delimiters
+- rsID patterns in data rows
+
+If auto-detection fails, it falls back to generic parsing that searches for rsID patterns.
 
 ## What Gets Extracted
 
@@ -103,9 +175,10 @@ After running the script, you can share the filtered output file for educational
 ## Technical Notes
 
 - **Cross-platform**: Works on macOS, Linux, and Windows (via WSL/Git Bash)
-- **No dependencies**: Uses only standard bash utilities
+- **No dependencies**: Uses only standard bash utilities (grep, awk, sed)
 - **Auto-detection**: Automatically detects DNA file format
 - **Safe**: Read-only access to your original file
+- **Gzip support**: Can read .vcf.gz files directly
 
 ## Troubleshooting
 
@@ -121,13 +194,30 @@ chmod +x filter_dna_variants.sh
 ./filter_dna_variants.sh ~/Downloads/AncestryDNA.txt
 ```
 
-**"No variants extracted"**
-- Your DNA file may be compressed (unzip it first)
-- Try specifying the output file: `./filter_dna_variants.sh input.txt output.txt`
+**Status: FAILED (✗)**
+- File format may not be recognized - check the "Format detected" line
+- File might use non-standard rsID naming conventions
+- Try: `head -20 yourfile.txt` to inspect the file structure
+- If format looks correct, the file may be from a different species or panel
+
+**Status: PARTIAL (⚠)**
+- Low variant count is normal for filtered or targeted panels
+- Missing alleles may indicate format parsing issues
+- Output is still usable but review for completeness
 
 **Windows Users**
 - Use Git Bash, WSL, or similar bash environment
 - Or upload your file to a Mac/Linux system
+
+## Adding Custom Variants
+
+To add your own variants of interest, edit the `GENE_CATEGORIES` section in the script:
+
+```bash
+GENE_CATEGORIES["My_Custom_Category"]="rs12345 rs67890 rs11111"
+```
+
+Then add the corresponding grep pattern in the extraction section.
 
 ## License
 
