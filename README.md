@@ -2,6 +2,8 @@
 
 A universal script to extract relevant genetic variants from raw DNA testing data for educational analysis of brain chemistry, stress response, and drug metabolism.
 
+You can upload the <10 KB filtered DNA data to Claude, ChatGPT, or Gemini to get personalized feedback on mental health, supplementation, stress response, and drug metabolism.
+
 ## Quick Start
 
 ```bash
