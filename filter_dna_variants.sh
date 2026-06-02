@@ -38,8 +38,9 @@
 #   neuropsychiatric and pharmacogenomic analysis, organized by gene/pathway.
 #
 # PRIVACY NOTE:
-#   The output file contains only ~200 specific variants (out of 600,000+)
-#   related to brain chemistry, stress response, and drug metabolism.
+#   The output file contains only ~215 specific variants (out of 600,000+)
+#   related to brain chemistry, stress response, drug metabolism,
+#   omega-3/fatty-acid metabolism, and connective-tissue resilience.
 #   This is safe to share for educational analysis while keeping the
 #   vast majority of your genetic data private.
 #
@@ -118,14 +119,22 @@ HOW TO GET YOUR RAW DATA:
 
 WHAT THIS EXTRACTS:
 
-  ~200 variants across these categories:
+  ~215 variants across these categories:
     • Dopamine system (COMT, DRD2, DRD3, DRD4, DAT1, DBH)
     • Serotonin system (SERT, 5-HT2A, TPH2, MAOA)
     • Stress response (FKBP5, NR3C1, CRHR1, BDNF)
     • GABA receptors (GABRA2, GABBR1/2)
     • Methylation (MTHFR, MTR, MTRR)
     • Drug metabolism (CYP2D6, CYP2C19, CYP1A2)
+    • Omega-3 / fatty-acid metabolism (FADS1/2, ELOVL2, APOE)
+    • Connective tissue & joint (COL5A1, GDF5, COL1A1, MMP3, ESR1)
     • And more...
+
+  CAVEATS:
+    • APOE rs429358 = T/T on AncestryDNA usually means NOT MEASURED,
+      not e4-negative (Ancestry mis-genotypes this SNP).
+    • COL5A1 rs12722 is reported on opposite strands in some papers;
+      orient to forward strand before calling C/C.
 
 PRIVACY:
     Your raw DNA file contains 600,000-700,000+ variants.
@@ -195,6 +204,47 @@ GENE_CATEGORIES["VDR_Vitamin_D_Receptor"]="rs1544410 rs731236 rs7975232 rs222857
 GENE_CATEGORIES["ADRB2_Beta2_Adrenergic"]="rs1042713 rs1042714"
 GENE_CATEGORIES["CYP450_Drug_Metabolism"]="rs1065852 rs16947 rs3892097 rs1799853 rs1057910 rs4244285 rs12248560 rs4986893 rs762551"
 GENE_CATEGORIES["Inflammation_Markers"]="rs1800629 rs1800795"
+
+#-------------------------------------------------------------------------------
+# OMEGA-3 / FATTY-ACID METABOLISM
+#   Governs conversion of plant ALA -> EPA/DHA and brain DHA delivery.
+#   - FADS1/FADS2 rs174537/rs174546/rs1535: T/minor allele = poor desaturase
+#     activity -> preformed EPA/DHA (fish/algal) more essential.
+#   - ELOVL2 rs953413: DHA elongation; also a major epigenetic-aging clock locus.
+#   - APOE rs429358 + rs7412 define the e2/e3/e4 haplotype (e4 shifts DHA
+#     brain-delivery -> push DHA earlier/higher).
+#
+#   CAVEAT (APOE): AncestryDNA does NOT reliably genotype rs429358 and often
+#   emits a false T/T. If your output shows rs429358 = T/T, read that as
+#   "NOT MEASURED", not "e4-negative". rs4420638 (APOC1) is included as a
+#   partial e4 proxy; for a trustworthy e-status use 23andMe v5, a dedicated
+#   APOE assay, or imputation against a 1000 Genomes panel.
+#-------------------------------------------------------------------------------
+GENE_CATEGORIES["FADS1_Omega3_Conversion"]="rs174537 rs174546"
+GENE_CATEGORIES["FADS2_Omega3_Conversion"]="rs1535"
+GENE_CATEGORIES["ELOVL2_DHA_Elongation"]="rs953413"
+GENE_CATEGORIES["APOE_Lipid_DHA_Transport"]="rs429358 rs7412 rs4420638"
+
+#-------------------------------------------------------------------------------
+# CONNECTIVE TISSUE / JOINT & TENDON
+#   Collagen structure, ECM remodelling, cartilage/OA and ligament risk.
+#   - COL5A1 rs12722: C/C (forward strand) = ↑ ACL/tendon rupture + stiffer
+#     collagen. HIGH-yield connective-tissue read.
+#   - GDF5 rs143383: T allele = ↑ knee OA (only knee-OA variant with
+#     genome-wide-significant meta-analytic support, ~1.2x OR); C/C protective.
+#   - COL1A1 rs1800012 (Sp1), MMP3 rs679620: collagen ratio / ECM remodelling.
+#   - COL12A1/COL11A1/SMAD3: cartilage/OA, exploratory (low confidence).
+#   - ESR1 rs2234693: ligament laxity (ACL literature, low confidence).
+#
+#   CAVEAT (strand): some sports-genetics papers report COL5A1 rs12722 on the
+#   OPPOSITE strand. Orient to the forward strand before calling C/C.
+#-------------------------------------------------------------------------------
+GENE_CATEGORIES["COL5A1_Connective_Tissue"]="rs12722"
+GENE_CATEGORIES["GDF5_Joint_Cartilage"]="rs143383"
+GENE_CATEGORIES["COL1A1_Collagen_Structure"]="rs1800012"
+GENE_CATEGORIES["MMP3_ECM_Remodeling"]="rs679620"
+GENE_CATEGORIES["Cartilage_OA_Exploratory"]="rs970547 rs4907986 rs12901499"
+GENE_CATEGORIES["ESR1_Ligament_Laxity"]="rs2234693"
 
 #-------------------------------------------------------------------------------
 # BUILD COMPLETE RSID LIST
@@ -326,8 +376,8 @@ extract_vcf() {
     local cat_cmd="cat"
     [[ "$file" == *.gz ]] && cat_cmd="zcat"
     
-    $cat_cmd "$file" | grep -v "^##" | \
-    awk -F'\t' 'BEGIN{OFS="\t"} 
+    $cat_cmd "$file" | grep -v "^##" | tr -d '\r' | \
+    awk -F'\t' 'BEGIN{OFS="\t"}
         /^#CHROM/ {next}
         $3 ~ /^rs[0-9]+$/ {
             # Extract genotype from first sample (column 10+)
@@ -351,7 +401,8 @@ extract_vcf() {
 extract_plink_bim() {
     local file="$1"
     # .bim format: chr, rsid, cm, pos, a1, a2 (space or tab separated)
-    awk 'BEGIN{OFS="\t"} 
+    awk 'BEGIN{OFS="\t"}
+        { sub(/\r$/, "") }
         $2 ~ /^rs[0-9]+$/ {
             print $2, $1, $4, $5, $6
         }' "$file"
@@ -361,6 +412,7 @@ extract_illumina_report() {
     local file="$1"
     # Find [Data] section and extract
     awk -F'\t' 'BEGIN{OFS="\t"; in_data=0; rsid_col=0; chr_col=0; pos_col=0; a1_col=0; a2_col=0}
+        { sub(/\r$/, "") }
         /^\[Data\]/ {in_data=1; next}
         in_data==1 && NF>3 && rsid_col==0 {
             # Parse header row
@@ -387,8 +439,9 @@ extract_illumina_report() {
 extract_consumer_tsv() {
     local file="$1"
     # Standard consumer format: rsid, chr, pos, allele1, allele2 (tab-separated)
-    grep -v "^#" "$file" | \
-    awk -F'\t' 'BEGIN{OFS="\t"} 
+    # tr -d '\r' hardens against CRLF (Windows) line endings.
+    grep -v "^#" "$file" | tr -d '\r' | \
+    awk -F'\t' 'BEGIN{OFS="\t"}
         NF>=4 && $1 ~ /^rs[0-9]+$/ {
             a1 = $4
             a2 = (NF>=5) ? $5 : $4
@@ -404,7 +457,7 @@ extract_consumer_tsv() {
 extract_consumer_csv() {
     local file="$1"
     # CSV version of consumer format
-    grep -v "^#" "$file" | grep -v "^\"#" | \
+    grep -v "^#" "$file" | grep -v "^\"#" | tr -d '\r' | \
     sed 's/","/\t/g; s/"//g; s/,/\t/g' | \
     awk -F'\t' 'BEGIN{OFS="\t"} 
         NF>=4 && $1 ~ /^rs[0-9]+$/ {
@@ -428,6 +481,7 @@ extract_generic_with_header() {
         OFS="\t"
         rsid_col=0; chr_col=0; pos_col=0; a1_col=0; a2_col=0; gt_col=0
     }
+    { sub(/\r$/, "") }
     NR<=5 && rsid_col==0 {
         for(i=1; i<=NF; i++) {
             col = tolower($i)
@@ -465,7 +519,7 @@ extract_generic_with_header() {
 extract_generic_search() {
     local file="$1"
     # Try to find rsID patterns and extract surrounding data
-    grep -E "rs[0-9]+" "$file" | \
+    grep -E "rs[0-9]+" "$file" | tr -d '\r' | \
     sed 's/[,;|]/\t/g' | \
     awk 'BEGIN{OFS="\t"} {
         for(i=1; i<=NF; i++) {
@@ -537,7 +591,7 @@ extract_all_variants() {
 # MAIN PROCESSING
 #-------------------------------------------------------------------------------
 echo -e "${BLUE}╔════════════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║${NC}            ${GREEN}UNIVERSAL DNA VARIANT FILTER v2.0${NC}                      ${BLUE}║${NC}"
+echo -e "${BLUE}║${NC}            ${GREEN}UNIVERSAL DNA VARIANT FILTER v3.0${NC}                      ${BLUE}║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 

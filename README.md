@@ -101,7 +101,7 @@ If auto-detection fails, it falls back to generic parsing that searches for rsID
 
 ## What Gets Extracted
 
-The script filters ~200 variants from ~700,000 total, covering:
+The script filters ~215 variants from ~700,000 total, covering:
 
 ### Neurotransmitter Systems
 - **COMT** – Dopamine/norepinephrine clearance (includes rs4680 Val158Met)
@@ -133,6 +133,23 @@ The script filters ~200 variants from ~700,000 total, covering:
 - **CYP2D6** – Metabolizes many psych meds
 - **CYP2C19** – Metabolizes SSRIs, PPIs
 - **CYP1A2** – Caffeine metabolism
+
+### Omega-3 / Fatty-Acid Metabolism
+- **FADS1 / FADS2** – Desaturase activity; T/minor allele = poor ALA→EPA/DHA conversion → preformed EPA/DHA more essential (rs174537, rs174546, rs1535)
+- **ELOVL2** – DHA elongation; also a major epigenetic-aging clock locus (rs953413)
+- **APOE** – ε2/ε3/ε4 haplotype; ε4 shifts DHA brain-delivery (rs429358 + rs7412, with rs4420638/APOC1 as an ε4 proxy)
+
+### Connective Tissue & Joint
+- **COL5A1** – ACL/tendon resilience; rs12722 C/C = stiffer collagen, higher rupture risk
+- **GDF5** – Knee OA (rs143383 T allele; only knee-OA variant with genome-wide-significant meta-analytic support, ~1.2× OR)
+- **COL1A1** – Type-I collagen ratio (rs1800012 Sp1)
+- **MMP3** – ECM remodelling, modifies COL5A1 risk (rs679620)
+- **COL12A1 / COL11A1 / SMAD3** – Cartilage/OA, exploratory (rs970547, rs4907986, rs12901499)
+- **ESR1** – Ligament laxity (rs2234693)
+
+> **APOE caveat:** AncestryDNA does **not** reliably genotype `rs429358` and often emits a false `T/T`. If your output shows `rs429358 = T/T`, read it as **"not measured"**, not ε4-negative. For a trustworthy ε-status use 23andMe v5, a dedicated APOE assay, or imputation against a 1000 Genomes panel.
+>
+> **Strand caveat:** Some sports-genetics papers report `COL5A1 rs12722` on the opposite strand — orient to the forward strand before calling C/C.
 
 ### Other Relevant Systems
 - **OPRM1** – Opioid receptor
